@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox, RadioGroup, Radio, Button } from '@mui/material';
 
-interface EncuestaData {
+export interface EncuestaData {
   juegos: string[];
   recompensa: string;
   crearJuegos: string;
@@ -26,9 +26,20 @@ export default function Encuesta({ onSubmit }: { onSubmit: (data: EncuestaData) 
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked } = e.target;
+  
     setEncuestaData(prev => {
-      const selectedItems = checked ? [...prev[name as keyof EncuestaData], value] : prev[name as keyof EncuestaData].filter((item: string) => item !== value);
-      return { ...prev, [name]: selectedItems };
+      const prevValue = prev[name as keyof EncuestaData];
+  
+      // Asegurarse de que estamos trabajando con un array
+      if (Array.isArray(prevValue)) {
+        const selectedItems = checked
+          ? [...prevValue, value] // Agregar el nuevo valor si está marcado
+          : prevValue.filter(item => item !== value); // Remover si no está marcado
+  
+        return { ...prev, [name]: selectedItems };
+      }
+  
+      return prev;
     });
   };
 
