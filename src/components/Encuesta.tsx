@@ -8,7 +8,7 @@ export interface EncuestaData {
   colores: string;
   concentracion: string[];
   mejorarTiempo: string;
-  sonidos: string[];
+  sonidos: string;
   recibirAyuda: string;
 }
 
@@ -20,7 +20,7 @@ export default function Encuesta({ onSubmit }: { onSubmit: (data: EncuestaData) 
     colores: '',
     concentracion: [],
     mejorarTiempo: '',
-    sonidos: [],
+    sonidos: '',
     recibirAyuda: '',
   });
 
@@ -120,11 +120,11 @@ export default function Encuesta({ onSubmit }: { onSubmit: (data: EncuestaData) 
       {/* Sección 4: Preferencias de Interacción */}
       <FormControl component="fieldset">
         <FormLabel component="legend">7. ¿Qué tipo de sonidos te gustan más en los juegos?</FormLabel>
-        <FormGroup>
-          <FormControlLabel control={<Checkbox name="sonidos" value="divertidos" onChange={handleCheckboxChange} />} label="Sonidos divertidos y rápidos" />
-          <FormControlLabel control={<Checkbox name="sonidos" value="suaves" onChange={handleCheckboxChange} />} label="Sonidos suaves y calmantes" />
-          <FormControlLabel control={<Checkbox name="sonidos" value="sinSonido" onChange={handleCheckboxChange} />} label="Prefiero jugar sin sonidos" />
-        </FormGroup>
+        <RadioGroup name="sonidos" value={encuestaData.sonidos} onChange={handleRadioChange}>
+          <FormControlLabel value="divertidos" control={<Radio />} label="Sonidos divertidos y rápidos" />
+          <FormControlLabel value="suaves" control={<Radio />} label="Sonidos suaves y calmantes" />
+          <FormControlLabel value="sinSonido" control={<Radio />} label="Prefiero jugar sin sonidos" />
+        </RadioGroup>
       </FormControl>
 
       <FormControl component="fieldset">

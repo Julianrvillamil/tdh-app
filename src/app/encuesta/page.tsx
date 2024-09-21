@@ -1,18 +1,44 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Encuesta from '../../components/Encuesta';
+import Encuesta, { EncuestaData } from '../../components/Encuesta'; // Asegúrate de que la interfaz esté exportada
 
-// Usa la interfaz correcta en lugar de "any"
-import { EncuestaData } from '../../components/Encuesta'; // Asegúrate de que la interfaz esté exportada
+
+interface Usuario {
+  id: number;
+  nombreCompleto: string;
+  edad: string;
+  genero: string;
+  tutorNombre: string;
+  tutorEmail: string;
+  tutorTelefono: string;
+  diagnosticoTDAH: string;
+  encuesta: EncuestaData | null;
+}
 
 export default function EncuestaPage() {
   const router = useRouter();
 
   const handleSubmit = (data: EncuestaData) => {
-    localStorage.setItem('encuestaData', JSON.stringify(data)); // Guardar los datos en el localStorage
-    router.push('/juego'); // Redirigir a la página del juego
+    const userId = new URLSearchParams(window.location.search).get('id'); 
+    const existingData = localStorage.getItem('usuarios');
+    const usuarios = existingData ? JSON.parse(existingData) : [];
+  
+    // Buscar el usuario y actualizar sus datos con la encuesta
+    const updatedUsuarios = usuarios.map((usuario: Usuario) => {
+      if (usuario.id === parseInt(userId as string)) {
+        return { ...usuario, encuesta: data };
+      }
+      return usuario;
+    });
+  
+    // Guardar los datos actualizados en localStorage
+    localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
+  
+    // Redirigir al juego
+    router.push('/juego');
   };
+  
 
   return (
     <div>
