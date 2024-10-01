@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Button, Grid, Typography } from '@mui/material';
+import { EncuestaData } from '../components/Encuesta';
 
 interface Carta {
   id: number;
@@ -8,9 +9,22 @@ interface Carta {
   encontrada: boolean;
 }
 
+interface Usuario {
+  id: number;
+  nombreCompleto: string;
+  edad: string;
+  genero: string;
+  tutorNombre: string;
+  tutorEmail: string;
+  tutorTelefono: string;
+  diagnosticoTDAH: string;
+  encuesta: EncuestaData | null;
+  tiempoJuego?: number;
+}
+
 const generarCartas = (): Carta[] => {
-  const contenidoCartas = ['🍎', '🍌', '🍇', '🍉', '🍓', '🍒']; // Emoticonos de frutas
-  const cartasDuplicadas = [...contenidoCartas, ...contenidoCartas]; // Duplicar las cartas para hacer pares
+  const contenidoCartas = ['🍎', '🍌', '🍇', '🍉', '🍓', '🍒'];
+  const cartasDuplicadas = [...contenidoCartas, ...contenidoCartas];
   const cartasBarajadas = cartasDuplicadas
     .sort(() => Math.random() - 0.5)
     .map((contenido, index) => ({
@@ -84,7 +98,26 @@ export default function JuegoMemoria() {
   };
 
   const manejarTerminar = () => {
-    if (intervalo) clearInterval(intervalo);
+    if (intervalo) clearInterval(intervalo); // Detenemos el temporizador
+
+    // Obtener los usuarios del localStorage
+    const existingData = localStorage.getItem('usuarios');
+    const usuarios: Usuario[] = existingData ? JSON.parse(existingData) : [];
+
+    // Obtener el último usuario registrado (el que está jugando)
+    const ultimoUsuario = usuarios[usuarios.length - 1];
+
+    // Actualizar el tiempo de juego del usuario
+    const updatedUsuarios = usuarios.map((usuario) => {
+      if (usuario.id === ultimoUsuario.id) {
+        return { ...usuario, tiempoJuego: tiempo }; // Guardar el tiempo de juego
+      }
+      return usuario;
+    });
+
+    // Guardar los datos actualizados en el localStorage
+    localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
+
     alert(`Juego terminado. Tiempo jugado: ${tiempo} segundos`);
   };
 

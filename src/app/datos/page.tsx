@@ -24,6 +24,7 @@ interface UsuarioData {
   tutorTelefono: string;
   diagnosticoTDAH: string;
   encuesta: EncuestaData | null;
+  tiempoJuego: number | null;
 }
 
 export default function DatosPage() {
@@ -69,32 +70,34 @@ export default function DatosPage() {
 
       <TableContainer component={Paper}>
         <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Nombre Completo</TableCell>
-              <TableCell>Edad</TableCell>
-              <TableCell>Género</TableCell>
-              <TableCell>Tutor Nombre</TableCell>
-              <TableCell>Tutor Email</TableCell>
-              <TableCell>Teléfono del Tutor</TableCell>
-              <TableCell>Diagnóstico TDAH</TableCell>
-              <TableCell>Encuesta Completada</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {usuarios.map((usuario) => (
-              <TableRow key={usuario.id}>
-                <TableCell>{usuario.nombreCompleto}</TableCell>
-                <TableCell>{usuario.edad}</TableCell>
-                <TableCell>{usuario.genero}</TableCell>
-                <TableCell>{usuario.tutorNombre}</TableCell>
-                <TableCell>{usuario.tutorEmail}</TableCell>
-                <TableCell>{usuario.tutorTelefono}</TableCell>
-                <TableCell>{usuario.diagnosticoTDAH}</TableCell>
-                <TableCell>{usuario.encuesta ? 'Sí' : 'No'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+        <TableHead>
+        <TableRow>
+          <TableCell>Nombre Completo</TableCell>
+          <TableCell>Edad</TableCell>
+          <TableCell>Género</TableCell>
+          <TableCell>Tutor Nombre</TableCell>
+          <TableCell>Tutor Email</TableCell>
+          <TableCell>Teléfono del Tutor</TableCell>
+          <TableCell>Diagnóstico TDAH</TableCell>
+          <TableCell>Encuesta Completada</TableCell>
+          <TableCell>Tiempo Jugado (segundos)</TableCell> {/* Nueva columna */}
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {usuarios.map((usuario) => (
+          <TableRow key={usuario.id}>
+            <TableCell>{usuario.nombreCompleto}</TableCell>
+            <TableCell>{usuario.edad}</TableCell>
+            <TableCell>{usuario.genero}</TableCell>
+            <TableCell>{usuario.tutorNombre}</TableCell>
+            <TableCell>{usuario.tutorEmail}</TableCell>
+            <TableCell>{usuario.tutorTelefono}</TableCell>
+            <TableCell>{usuario.diagnosticoTDAH}</TableCell>
+            <TableCell>{usuario.encuesta ? 'Sí' : 'No'}</TableCell>
+            <TableCell>{usuario.tiempoJuego ?? 'N/A'}</TableCell> 
+          </TableRow>
+        ))}
+      </TableBody>
         </Table>
       </TableContainer>
     </Box>
