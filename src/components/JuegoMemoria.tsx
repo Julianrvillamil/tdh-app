@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Box, Button, Grid, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation'; // Importar useRouter para redirigir
 import { EncuestaData } from '../components/Encuesta';
+
+import Explosion from "react-canvas-confetti/dist/presets/fireworks";
+
 
 interface Carta {
   id: number;
@@ -44,6 +48,8 @@ export default function JuegoMemoria() {
   const [bloquear, setBloquear] = useState(false);
   const [tiempo, setTiempo] = useState(0);
   const [intervalo, setIntervalo] = useState<NodeJS.Timeout | null>(null);
+  const [completado, setCompletado] = useState(false); // Controlar si el juego se ha completado
+  const router = useRouter(); // Para redirigir
 
   // Empezar el temporizador cuando comience el juego
   useEffect(() => {
@@ -119,6 +125,11 @@ export default function JuegoMemoria() {
     localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
 
     alert(`Juego terminado. Tiempo jugado: ${tiempo} segundos`);
+    setCompletado(true); // Marcar como completado
+  };
+
+  const manejarVolverRegistro = () => {
+    router.push('/'); // Redirigir al registro
   };
 
   return (
@@ -163,6 +174,18 @@ export default function JuegoMemoria() {
       >
         Terminar Juego
       </Button>
+
+      {completado && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 3, mb: 3 }}>
+          <Typography variant="h6" color="success.main" mb={2}>
+            ¡Has completado el juego de memoria!
+          </Typography>
+          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro}>
+            Volver al Registro
+          </Button>
+          <Explosion autorun={{ speed: 1 }}/>
+        </Box>
+      )}
     </Box>
   );
 }
