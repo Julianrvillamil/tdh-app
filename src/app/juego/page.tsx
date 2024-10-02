@@ -6,6 +6,7 @@ import JuegoColores from '../../components/JuegoColores';
 
 export default function JuegoPage() {
   const [juegoSeleccionado, setJuegoSeleccionado] = useState<string | null>(null);
+  const [fondoDegradado, setFondoDegradado] = useState<string>('');
 
   useEffect(() => {
     // Obtener los usuarios del localStorage
@@ -19,6 +20,22 @@ export default function JuegoPage() {
       // Verificar si el último usuario y su encuesta existen
       if (ultimoUsuario && ultimoUsuario.encuesta) {
         const juegosSeleccionados = ultimoUsuario.encuesta.juegos;
+        const preferenciaColores = ultimoUsuario.encuesta.colores; // Asegúrate que el nombre del campo sea el correcto
+        console.log('preferenciaColores', preferenciaColores);
+        
+        // Cambiar el fondo de la página según la preferencia de colores
+        switch (preferenciaColores) {
+          case 'brillantes':
+            setFondoDegradado('linear-gradient(45deg, #FF5733, #FFC300, #DAF7A6)');
+            break;
+          case 'suaves':
+            setFondoDegradado('linear-gradient(45deg, #B39DDB, #90CAF9, #A5D6A7)');
+            break;
+          case 'No tengo preferencia':
+          default:
+            setFondoDegradado('linear-gradient(45deg, #B39DDB, #90CAF9, #A5D6A7)');
+            break;
+        }
 
         // Si se selecciona "Juego de Memoria" junto con otros juegos, priorizamos el de memoria
         if (juegosSeleccionados.includes('memoria')) {
@@ -41,7 +58,15 @@ export default function JuegoPage() {
   }, []);
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: '100vh',  // Asegurar que ocupe toda la pantalla
+        background: fondoDegradado,  // Aplicar el degradado de fondo dinámico
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       {/* Renderizar el juego basado en la selección */}
       {juegoSeleccionado === 'memoria' && <JuegoMemoria />}
       {juegoSeleccionado === 'rompecabezas' && <JuegoRompecabezas />}
