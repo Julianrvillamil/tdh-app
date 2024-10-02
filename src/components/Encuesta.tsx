@@ -103,9 +103,7 @@ export default function Encuesta({ onSubmit }: { onSubmit: (data: EncuestaData) 
         <FormGroup>
           <FormControlLabel control={<Checkbox name="concentracion" value="musica" onChange={handleCheckboxChange} />} label="Escuchar música suave" />
           <FormControlLabel control={<Checkbox name="concentracion" value="imagenes" onChange={handleCheckboxChange} />} label="Ver imágenes coloridas o animaciones" />
-          <FormControlLabel control={<Checkbox name="concentracion" value="rompecabezas" onChange={handleCheckboxChange} />} label="Resolver rompecabezas" />
-          <FormControlLabel control={<Checkbox name="concentracion" value="arrastrar" onChange={handleCheckboxChange} />} label="Mover cosas en la pantalla (arrastrar y soltar)" />
-          <FormControlLabel control={<Checkbox name="concentracion" value="juegosRapidos" onChange={handleCheckboxChange} />} label="Juegos rápidos donde tengo que reaccionar rápido" />
+          <FormControlLabel control={<Checkbox name="concentracion" value="juegosRapidos" onChange={handleCheckboxChange} />} label="Juegos rápidos donde tengo que reaccionar" />
         </FormGroup>
       </FormControl>
 

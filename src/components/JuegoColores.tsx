@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Modal } from '@mui/material';
 import { useTimer } from '../hooks/useTimer';
 import { EncuestaData } from '../components/Encuesta';
 import { useRouter } from 'next/navigation';
-
 import Explosion from "react-canvas-confetti/dist/presets/fireworks";
 
-
-const coloresDisponibles = ['🔴', '🟢', '🔵', '🟡'];
+const coloresDisponibles = ['🔴', '🟢', '🟡', '🟣', '⚫'];
 
 const generarPatronColores = (longitud: number): string[] => {
   return Array.from({ length: longitud }, () => coloresDisponibles[Math.floor(Math.random() * coloresDisponibles.length)]);
@@ -26,15 +24,29 @@ interface Usuario {
   tiempoJuego?: number;
 }
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 export default function JuegoColores() {
   const [coloresSeleccionados, setColoresSeleccionados] = useState<string[]>([]);
-  const [patronColores] = useState<string[]>(generarPatronColores(4)); // Generar patrón de 4 colores
+  const [patronColores] = useState<string[]>(generarPatronColores(5));
   const [indiceActual, setIndiceActual] = useState(0);
   const [error, setError] = useState(false);
   const [completado, setCompletado] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const { tiempo, detenerTiempo } = useTimer();
-  const router = useRouter(); 
+  const router = useRouter();
 
   const manejarClick = (color: string) => {
     if (color === patronColores[indiceActual]) {
@@ -51,38 +63,38 @@ export default function JuegoColores() {
   };
 
   useEffect(() => {
-    if (indiceActual === patronColores.length) {
+    if (indiceActual === patronColores.length && !completado) {
       setCompletado(true);
       detenerTiempo();
+      manejarTerminar();
     }
-  }, [indiceActual, detenerTiempo, patronColores]);
+  }, [indiceActual, detenerTiempo]);
 
   const manejarTerminar = () => {
     detenerTiempo();
-    // Obtener los usuarios del localStorage
     const existingData = localStorage.getItem('usuarios');
     const usuarios: Usuario[] = existingData ? JSON.parse(existingData) : [];
 
-    // Obtener el último usuario registrado (el que está jugando)
     const ultimoUsuario = usuarios[usuarios.length - 1];
 
-    // Actualizar el tiempo de juego del usuario
     const updatedUsuarios = usuarios.map((usuario) => {
       if (usuario.id === ultimoUsuario.id) {
-        return { ...usuario, tiempoJuego: tiempo }; // Guardar el tiempo de juego
+        return { ...usuario, tiempoJuego: tiempo };
       }
       return usuario;
     });
 
-    // Guardar los datos actualizados en el localStorage
     localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
 
-    alert(`Juego terminado. Tiempo jugado: ${tiempo} segundos`);
+    setOpenModal(true);
+    setShowConfetti(true);
   };
 
   const manejarVolverRegistro = () => {
-    router.push('/'); 
+    router.push('/');
   };
+
+  const handleClose = () => setOpenModal(false);
 
   return (
     <Box sx={{ textAlign: 'center', mt: 5 }}>
@@ -95,7 +107,7 @@ export default function JuegoColores() {
       </Typography>
 
       <Typography variant="h6" mb={3}>
-        Patron de Colores: {patronColores.join(' ')}
+        Patrón de Colores: {patronColores.join(' ')}
       </Typography>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
@@ -116,9 +128,23 @@ export default function JuegoColores() {
         Colores seleccionados: {coloresSeleccionados.join(' ')}
       </Typography>
 
-      <Button variant="contained" color="primary" onClick={manejarTerminar} sx={{ mt: 3 }}>
-        Terminar Juego
-      </Button>
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Tiempo Jugado: {tiempo} segundos
+          </Typography>
+          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
+            Volver al Registro
+          </Button>
+        </Box>
+      </Modal>
+
+      {showConfetti && <Explosion autorun={{ speed: 1, duration: 2000 }} />}
 
       {completado && (
         <>
@@ -128,7 +154,6 @@ export default function JuegoColores() {
           <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
           Volver al Registro
           </Button>
-          <Explosion autorun={{ speed: 1 }}/>
         </>
       )}
     </Box>

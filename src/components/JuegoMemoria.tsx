@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, Grid, Modal, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation'; // Importar useRouter para redirigir
+import { useTimer } from '../hooks/useTimer'; // Custom hook para manejar el tiempo
 import { EncuestaData } from '../components/Encuesta';
-
 import Explosion from "react-canvas-confetti/dist/presets/fireworks";
-
 
 interface Carta {
   id: number;
@@ -26,19 +25,27 @@ interface Usuario {
   tiempoJuego?: number;
 }
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 const generarCartas = (): Carta[] => {
   const contenidoCartas = ['🍎', '🍌', '🍇', '🍉', '🍓', '🍒'];
   const cartasDuplicadas = [...contenidoCartas, ...contenidoCartas];
-  const cartasBarajadas = cartasDuplicadas
-    .sort(() => Math.random() - 0.5)
-    .map((contenido, index) => ({
-      id: index,
-      contenido,
-      visible: false,
-      encontrada: false,
-    }));
-
-  return cartasBarajadas;
+  return cartasDuplicadas.sort(() => Math.random() - 0.5).map((contenido, index) => ({
+    id: index,
+    contenido,
+    visible: false,
+    encontrada: false,
+  }));
 };
 
 export default function JuegoMemoria() {
@@ -46,56 +53,32 @@ export default function JuegoMemoria() {
   const [primerCarta, setPrimerCarta] = useState<Carta | null>(null);
   const [segundoCarta, setSegundoCarta] = useState<Carta | null>(null);
   const [bloquear, setBloquear] = useState(false);
-  const [tiempo, setTiempo] = useState(0);
-  const [intervalo, setIntervalo] = useState<NodeJS.Timeout | null>(null);
-  const [completado, setCompletado] = useState(false); // Controlar si el juego se ha completado
-  const router = useRouter(); // Para redirigir
-
-  // Empezar el temporizador cuando comience el juego
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTiempo(t => t + 1);
-    }, 1000);
-    setIntervalo(interval);
-    return () => clearInterval(interval); // Limpiar cuando el componente se desmonte
-  }, []);
+  const { tiempo, detenerTiempo } = useTimer();
+  const [completado, setCompletado] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const router = useRouter();
 
   const manejarClick = (carta: Carta) => {
-    if (bloquear) return;
+    if (bloquear || (primerCarta && segundoCarta)) return;
 
-    if (primerCarta && segundoCarta) return;
-
-    setCartas(prevCartas =>
-      prevCartas.map(c =>
-        c.id === carta.id ? { ...c, visible: true } : c
-      )
-    );
+    setCartas(prevCartas => prevCartas.map(c => (c.id === carta.id ? { ...c, visible: true } : c)));
 
     if (!primerCarta) {
       setPrimerCarta(carta);
-    } else if (!segundoCarta) {
+    } else {
       setSegundoCarta(carta);
       setBloquear(true);
-
       setTimeout(() => {
         if (primerCarta.contenido === carta.contenido) {
-          setCartas(prevCartas =>
-            prevCartas.map(c =>
-              c.contenido === carta.contenido
-                ? { ...c, encontrada: true }
-                : c
-            )
-          );
+          setCartas(prevCartas => prevCartas.map(c =>
+            c.contenido === carta.contenido ? { ...c, encontrada: true } : c
+          ));
         } else {
-          setCartas(prevCartas =>
-            prevCartas.map(c =>
-              c.id === carta.id || c.id === primerCarta.id
-                ? { ...c, visible: false }
-                : c
-            )
-          );
+          setCartas(prevCartas => prevCartas.map(c =>
+            c.id === carta.id || c.id === primerCarta.id ? { ...c, visible: false } : c
+          ));
         }
-
         setPrimerCarta(null);
         setSegundoCarta(null);
         setBloquear(false);
@@ -104,33 +87,36 @@ export default function JuegoMemoria() {
   };
 
   const manejarTerminar = () => {
-    if (intervalo) clearInterval(intervalo); // Detenemos el temporizador
-
-    // Obtener los usuarios del localStorage
+    detenerTiempo();
     const existingData = localStorage.getItem('usuarios');
     const usuarios: Usuario[] = existingData ? JSON.parse(existingData) : [];
 
-    // Obtener el último usuario registrado (el que está jugando)
     const ultimoUsuario = usuarios[usuarios.length - 1];
 
-    // Actualizar el tiempo de juego del usuario
     const updatedUsuarios = usuarios.map((usuario) => {
       if (usuario.id === ultimoUsuario.id) {
-        return { ...usuario, tiempoJuego: tiempo }; // Guardar el tiempo de juego
+        return { ...usuario, tiempoJuego: tiempo };
       }
       return usuario;
     });
 
-    // Guardar los datos actualizados en el localStorage
     localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
 
-    alert(`Juego terminado. Tiempo jugado: ${tiempo} segundos`);
-    setCompletado(true); // Marcar como completado
+    setOpenModal(true);
+    setShowConfetti(true);
+    setCompletado(true);
   };
 
   const manejarVolverRegistro = () => {
-    router.push('/'); // Redirigir al registro
+    router.push('/');
   };
+
+  useEffect(() => {
+    const todasEncontradas = cartas.every(c => c.encontrada);
+    if (todasEncontradas && !completado) manejarTerminar();
+  }, [cartas, completado]);
+
+  const handleClose = () => setOpenModal(false);
 
   return (
     <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', mt: 5 }}>
@@ -142,12 +128,7 @@ export default function JuegoMemoria() {
       </Typography>
       <Grid container spacing={2}>
         {cartas.map(carta => (
-          <Grid
-            item
-            xs={4}
-            key={carta.id}
-            onClick={() => manejarClick(carta)}
-          >
+          <Grid item xs={4} key={carta.id} onClick={() => manejarClick(carta)}>
             <Box
               sx={{
                 height: 100,
@@ -165,27 +146,45 @@ export default function JuegoMemoria() {
           </Grid>
         ))}
       </Grid>
-      <Button
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={manejarTerminar}
-        sx={{ mt: 3 }}
+
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
       >
-        Terminar Juego
-      </Button>
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Tiempo Jugado: {tiempo} segundos
+          </Typography>
+          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
+            Volver al Registro
+          </Button>
+        </Box>
+      </Modal>
+
+      {showConfetti && <Explosion autorun={{ speed: 1, duration: 2000 }} />}
 
       {completado && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 3, mb: 3 }}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            mt: 3, 
+            mb: 3 
+          }}
+        >
           <Typography variant="h6" color="success.main" mb={2}>
             ¡Has completado el juego de memoria!
           </Typography>
-          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro}>
+          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2, mb: 3 }}>
             Volver al Registro
           </Button>
-          <Explosion autorun={{ speed: 1 }}/>
         </Box>
       )}
+
     </Box>
   );
 }

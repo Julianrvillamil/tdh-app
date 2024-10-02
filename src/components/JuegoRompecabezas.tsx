@@ -1,11 +1,9 @@
-import { useState, useEffect  } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Button, Typography, Modal } from '@mui/material';
 import { useTimer } from '../hooks/useTimer';
-import { useRouter } from 'next/navigation'; // Importar useRouter para redirigir
+import { useRouter } from 'next/navigation';
 import { EncuestaData } from '../components/Encuesta';
-
-import Explosion from "react-canvas-confetti/dist/presets/fireworks";
-
+import Explosion from "react-canvas-confetti/dist/presets/realistic";
 
 interface Pieza {
   id: number;
@@ -26,54 +24,62 @@ interface Usuario {
   tiempoJuego?: number;
 }
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 const generarPiezas = (): Pieza[] => {
   const contenidoPiezas = ['🧩1', '🧩2', '🧩3', '🧩4', '🧩5', '🧩6'];
-  const piezasBarajadas = contenidoPiezas
-    .sort(() => Math.random() - 0.5) // Barajar el orden de las piezas
+  return contenidoPiezas
+    .sort(() => Math.random() - 0.5)
     .map((contenido, index) => ({
       id: index,
       colocada: false,
       contenido,
     }));
-  return piezasBarajadas;
 };
 
 export default function JuegoRompecabezas() {
   const [piezas, setPiezas] = useState<Pieza[]>(generarPiezas());
-  const [siguienteNumero, setSiguienteNumero] = useState(1); // Número que debe seleccionarse
-  const [error, setError] = useState(false); // Para mostrar el error
+  const [siguienteNumero, setSiguienteNumero] = useState(1);
+  const [error, setError] = useState(false);
   const { tiempo, detenerTiempo } = useTimer();
-  const router = useRouter(); // Para redirigir al registro
-  const [completado, setCompletado] = useState(false); // Controla si el juego se ha completado
+  const router = useRouter();
+  const [completado, setCompletado] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  
   const manejarTerminar = () => {
     detenerTiempo();
 
-    // Obtener los usuarios del localStorage
     const existingData = localStorage.getItem('usuarios');
     const usuarios: Usuario[] = existingData ? JSON.parse(existingData) : [];
 
-    // Obtener el último usuario registrado (el que está jugando)
     const ultimoUsuario = usuarios[usuarios.length - 1];
 
-    // Actualizar el tiempo de juego del usuario
     const updatedUsuarios = usuarios.map((usuario) => {
       if (usuario.id === ultimoUsuario.id) {
-        return { ...usuario, tiempoJuego: tiempo }; // Guardar el tiempo de juego
+        return { ...usuario, tiempoJuego: tiempo };
       }
       return usuario;
     });
 
-    // Guardar los datos actualizados en el localStorage
     localStorage.setItem('usuarios', JSON.stringify(updatedUsuarios));
-
-    alert(`Juego terminado. Tiempo jugado: ${tiempo} segundos`);
-    setCompletado(true); // Marcar como completado
+    
+    setOpenModal(true);
+    setShowConfetti(true); // Disparar la explosión de confeti
   };
 
   const manejarVolverRegistro = () => {
-    router.push('/'); // Redirigir al registro
+    router.push('/');
   };
 
   const manejarClick = (pieza: Pieza) => {
@@ -87,19 +93,21 @@ export default function JuegoRompecabezas() {
     } else {
       setError(true);
       setTimeout(() => {
-        setPiezas(generarPiezas()); // Reiniciar el rompecabezas si el orden es incorrecto
-        setSiguienteNumero(1); // Reiniciar el número
+        setPiezas(generarPiezas());
+        setSiguienteNumero(1);
         setError(false);
       }, 1000);
     }
   };
 
+  const handleClose = () => setOpenModal(false);
+
   useEffect(() => {
-    if (siguienteNumero > 6) {
-      detenerTiempo();
-      setCompletado(true); // Marcar como completado
+    if (siguienteNumero > 6 && !completado) { // Solo se ejecuta si no está marcado como completado
+      manejarTerminar();
+      setCompletado(true); // Marcar como completado para que no vuelva a ejecutar manejarTerminar
     }
-  }, [siguienteNumero, detenerTiempo]);
+  }, [siguienteNumero, completado]);
 
   return (
     <Box sx={{ textAlign: 'center', mt: 5 }}>
@@ -132,21 +140,48 @@ export default function JuegoRompecabezas() {
         </Typography>
       )}
 
-    {!completado && (
-      <Button variant="contained" color="primary" onClick={manejarTerminar} sx={{ mt: 3 }}>
-        Terminar Juego
-      </Button>)}
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Tiempo Jugado: {tiempo} segundos
+          </Typography>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={manejarVolverRegistro}
+            sx={{ mt: 2 }}
+          >
+            Volver al Registro
+          </Button>
+        </Box>
+      </Modal>
+
+      {showConfetti && (
+        <Explosion
+          autorun={{ speed: 1, duration: 2000 }}
+          
+        />
+      )}
 
       {completado && (
         <>
           <Typography variant="h6" mt={3} color="success.main">
             ¡Has completado el Rompecabezas!
           </Typography>
-          <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={manejarVolverRegistro}
+            sx={{ mt: 2 }}
+          >
             Volver al Registro
           </Button>
-          <Explosion autorun={{ speed: 1 }}/>
-       </>
+        </>
       )}
     </Box>
   );
