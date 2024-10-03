@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Button, Typography, Modal } from '@mui/material';
 import { useTimer } from '../hooks/useTimer';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,10 @@ interface Pieza {
   columna: number;
   colocada: boolean;
   image: string;
+}
+
+interface PuzzlePieceProps {
+  pieza: Pieza;
 }
 
 const style = {
@@ -46,7 +50,8 @@ const generarPiezas = (): Pieza[] => {
 };
 
 // Componente de una pieza del rompecabezas
-function PuzzlePiece({ pieza }: any) {
+function PuzzlePiece({ pieza }: PuzzlePieceProps) {
+  const ref = useRef<HTMLImageElement | null>(null);
   const [{ isDragging }, drag] = useDrag({
     type: 'PIEZA',
     item: { id: pieza.id },
@@ -55,9 +60,11 @@ function PuzzlePiece({ pieza }: any) {
     }),
   });
 
+  drag(ref);
+
   return (
     <img
-      ref={drag}
+      ref={ref}
       src={pieza.image}
       alt={`Pieza ${pieza.id}`}
       style={{
@@ -69,20 +76,29 @@ function PuzzlePiece({ pieza }: any) {
     />
   );
 }
-
+interface PuzzleCellProps {
+  id: string;
+  fila: number;
+  columna: number;
+  piezaCorrecta: Pieza | null;
+  onDrop: (id: number, fila: number, columna: number) => void;
+}
 // Componente del lugar donde caerá la pieza
-function PuzzleCell({ id, fila, columna, piezaCorrecta, onDrop }: any) {
+function PuzzleCell({  fila, columna, piezaCorrecta, onDrop }: PuzzleCellProps) {
+  const ref = useRef<HTMLImageElement | null>(null);
   const [{ isOver }, drop] = useDrop({
     accept: 'PIEZA',
-    drop: (item) => onDrop(item.id, fila, columna),
+    drop: (item: { id: number }) => onDrop(item.id, fila, columna),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   });
 
+  drop(ref);
+
   return (
     <div
-      ref={drop}
+      ref={ref}
       style={{
         width: 100,
         height: 100,
@@ -97,7 +113,7 @@ function PuzzleCell({ id, fila, columna, piezaCorrecta, onDrop }: any) {
 
 export default function JuegoRompecabezas() {
   const [piezas, setPiezas] = useState<Pieza[]>(generarPiezas());
-  const [completado, setCompletado] = useState(false);
+  const [completado] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const { tiempo, detenerTiempo } = useTimer();
@@ -114,7 +130,12 @@ export default function JuegoRompecabezas() {
     const ultimoUsuario = usuarios[usuarios.length - 1];
 
     // Actualizar el tiempo de juego
-    const updatedUsuarios = usuarios.map((usuario) => {
+    interface Usuario {
+      id: number;
+      tiempoJuego?: number;
+    }
+
+    const updatedUsuarios: Usuario[] = usuarios.map((usuario: Usuario): Usuario => {
       if (usuario.id === ultimoUsuario.id) {
         return { ...usuario, tiempoJuego: tiempo }; // Guardar el tiempo jugado
       }
