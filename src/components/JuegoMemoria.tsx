@@ -5,6 +5,10 @@ import { useTimer } from '../hooks/useTimer'; // Custom hook para manejar el tie
 import { EncuestaData } from '../components/Encuesta';
 import Explosion from "react-canvas-confetti/dist/presets/fireworks";
 
+
+interface JuegoProps {
+  duplicarUsuarioYJugarOtro: () => void;
+} 
 interface Carta {
   id: number;
   contenido: string;
@@ -48,7 +52,7 @@ const generarCartas = (): Carta[] => {
   }));
 };
 
-export default function JuegoMemoria() {
+export default function JuegoMemoria({ duplicarUsuarioYJugarOtro }: JuegoProps) {
   const [cartas, setCartas] = useState<Carta[]>(generarCartas());
   const [primerCarta, setPrimerCarta] = useState<Carta | null>(null);
   const [segundoCarta, setSegundoCarta] = useState<Carta | null>(null);
@@ -160,6 +164,9 @@ export default function JuegoMemoria() {
           <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
             Volver al Registro
           </Button>
+          <Button onClick={duplicarUsuarioYJugarOtro} sx={{ mt: 2 }} variant="contained" color="success">
+            Jugar otro juego
+          </Button>
         </Box>
       </Modal>
 
@@ -181,6 +188,9 @@ export default function JuegoMemoria() {
           </Typography>
           <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2, mb: 3 }}>
             Volver al Registro
+          </Button>
+          <Button onClick={duplicarUsuarioYJugarOtro} sx={{ ml: 2, mt: 2 }} variant="contained" color="success">
+            Jugar otro juego
           </Button>
         </Box>
       )}

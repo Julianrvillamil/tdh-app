@@ -8,6 +8,10 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { isMobile } from 'react-device-detect';
 
+interface JuegoProps {
+  duplicarUsuarioYJugarOtro: () => void;
+} 
+
 interface Pieza {
   id: number;
   fila: number;
@@ -111,7 +115,7 @@ function PuzzleCell({  fila, columna, piezaCorrecta, onDrop }: PuzzleCellProps) 
   );
 }
 
-export default function JuegoRompecabezas() {
+export default function JuegoRompecabezas({ duplicarUsuarioYJugarOtro }: JuegoProps) {
   const [piezas, setPiezas] = useState<Pieza[]>(generarPiezas());
   const [completado] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -239,6 +243,9 @@ export default function JuegoRompecabezas() {
             >
               Volver al Registro
             </Button>
+            <Button onClick={duplicarUsuarioYJugarOtro} sx={{ mt: 2 }} variant="contained" color="success">
+              Jugar otro juego
+            </Button>
           </>
         )}
         <Modal
@@ -258,6 +265,9 @@ export default function JuegoRompecabezas() {
               sx={{ mt: 2 }}
             >
               Volver al Registro
+            </Button>
+            <Button onClick={duplicarUsuarioYJugarOtro} sx={{ ml: 2, mt: 2 }} variant="contained" color="success">
+              Jugar otro juego
             </Button>
           </Box>
         </Modal>

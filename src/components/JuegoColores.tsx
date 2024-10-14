@@ -11,6 +11,10 @@ const generarPatronColores = (longitud: number): string[] => {
   return Array.from({ length: longitud }, () => coloresDisponibles[Math.floor(Math.random() * coloresDisponibles.length)]);
 };
 
+interface JuegoProps {
+  duplicarUsuarioYJugarOtro: () => void;
+} 
+
 interface Usuario {
   id: number;
   nombreCompleto: string;
@@ -36,7 +40,7 @@ const style = {
   p: 4,
 };
 
-export default function JuegoColores() {
+export default function JuegoColores({ duplicarUsuarioYJugarOtro }: JuegoProps) {
   const [coloresSeleccionados, setColoresSeleccionados] = useState<string[]>([]);
   const [patronColores] = useState<string[]>(generarPatronColores(5));
   const [indiceActual, setIndiceActual] = useState(0);
@@ -141,6 +145,9 @@ export default function JuegoColores() {
           <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
             Volver al Registro
           </Button>
+          <Button onClick={duplicarUsuarioYJugarOtro} sx={{ mt: 2 }} variant="contained" color="success">
+            Jugar otro juego
+          </Button>
         </Box>
       </Modal>
 
@@ -153,6 +160,9 @@ export default function JuegoColores() {
           </Typography>
           <Button variant="outlined" color="secondary" onClick={manejarVolverRegistro} sx={{ mt: 2 }}>
           Volver al Registro
+          </Button>
+          <Button onClick={duplicarUsuarioYJugarOtro} sx={{ ml: 2, mt: 2 }} variant="contained" color="success">
+            Jugar otro juego
           </Button>
         </>
       )}
